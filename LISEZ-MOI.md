@@ -1,4 +1,6 @@
-# Ordonnances & Courriers — SMHEP
+# LeSacAOrdo
+
+© 2026 LESACA Julien. Tous droits réservés.
 
 Application web installable (PWA) pour produire des ordonnances et des courriers
 confraternels sur papier à en-tête SMHEP / HNIA Sainte-Anne, et les exporter en PDF.
@@ -13,8 +15,9 @@ confraternels sur papier à en-tête SMHEP / HNIA Sainte-Anne, et les exporter e
 | `icon-192.png`, `icon-512.png` | Icônes standard. |
 | `icon-maskable.png` | Icône adaptée aux masques Android (ronde, carrée, goutte…). |
 | `icon-180.png` | Icône pour l'écran d'accueil iOS. |
+| `icon-64.png` | Favicon et logo affiché dans l'en-tête de l'application. |
 
-Les sept fichiers doivent rester **dans le même répertoire**. Ne pas les renommer :
+Les huit fichiers doivent rester **dans le même répertoire**. Ne pas les renommer :
 `manifest.webmanifest` et `sw.js` sont appelés par leur nom.
 
 ## Pourquoi un hébergement est indispensable
@@ -31,7 +34,7 @@ en ligne, l'application installée se met à jour toute seule.
 
 1. Créez un compte sur `github.com`, puis un dépôt : **New repository**.
    Nom au choix (par exemple `ordonnances`), visibilité **Public**, puis **Create**.
-2. Sur la page du dépôt : **Add file → Upload files**. Sélectionnez les sept fichiers
+2. Sur la page du dépôt : **Add file → Upload files**. Sélectionnez les huit fichiers
    ci-dessus **en une seule fois** (pas le dossier lui-même : les fichiers doivent se
    trouver à la racine). Validez par **Commit changes**.
 3. Onglet **Settings → Pages**. Sous *Build and deployment*, choisissez
