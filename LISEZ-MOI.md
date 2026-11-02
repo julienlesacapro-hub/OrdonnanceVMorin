@@ -1,4 +1,6 @@
-# LeSacAOrdo
+# LeSacAOrdo-Morin
+
+Nom affiché sous l'icône de l'écran d'accueil : **MorinOrdo**.
 
 © 2026 LESACA Julien. Tous droits réservés.
 

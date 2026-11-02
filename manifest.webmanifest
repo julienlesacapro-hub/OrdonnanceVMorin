@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "LeSacAOrdo",
-  "short_name": "LeSacAOrdo",
-  "description": "LeSacAOrdo — générateur d'ordonnances et de courriers médicaux — SMHEP, HNIA Sainte-Anne.",
+  "name": "LeSacAOrdo-Morin",
+  "short_name": "MorinOrdo",
+  "description": "LeSacAOrdo-Morin — générateur d'ordonnances et de courriers médicaux — SMHEP, HNIA Sainte-Anne.",
   "lang": "fr",
   "dir": "ltr",
   "start_url": "./",

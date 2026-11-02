@@ -1,4 +1,4 @@
-/* Service worker — LeSacAOrdo
+/* Service worker — LeSacAOrdo-Morin
    © 2026 LESACA Julien. Tous droits réservés.
    Stratégie : réseau d'abord pour le document (afin de récupérer les mises à
    jour), cache d'abord pour les ressources fixes. Tout est pré-enregistré à
@@ -7,7 +7,7 @@
    Après chaque modification d'index.html, incrémenter VERSION ci-dessous :
    c'est ce qui déclenche la proposition de mise à jour sur les appareils. */
 
-const VERSION = 'smhep-v7';
+const VERSION = 'smhep-v8';
 
 const FICHIERS = [
   './',
