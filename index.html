@@ -564,13 +564,25 @@ button.ghost{background:var(--soft);border-color:#cbdcf2;color:var(--accent);fon
 <div id="dial">
   <div class="boite">
     <h3>Avant d'enregistrer le PDF</h3>
-    <p>Dans la fenêtre d'impression Android :</p>
-    <ul>
+    <p id="dialPlateforme">Dans la fenêtre d'impression Android :</p>
+    <ul id="dialAndroid">
       <li>Destination : <b>Enregistrer au format PDF</b></li>
       <li>Format : <b>A4</b></li>
       <li>Marges : <b>Aucune</b></li>
       <li>Options : cocher <b>Graphiques d'arrière-plan</b></li>
     </ul>
+    <ul id="dialIos" style="display:none">
+      <li>Choisir l'imprimante, ou pour un PDF : <b>Partager</b> (icône en haut) → <b>Enregistrer dans Fichiers</b></li>
+      <li>Vérifier que l'aperçu affiche bien <b>A4</b></li>
+    </ul>
+    <div id="dialSecours" style="display:none">
+      <p class="alerte" style="color:var(--warn);font-weight:600">La fenêtre d'impression ne s'est pas ouverte.</p>
+      <p>Sur iPhone et iPad, l'impression est souvent bloquée dans une application lancée depuis l'écran d'accueil. Ouvrez le document seul, puis utilisez <b>Partager → Imprimer</b>.</p>
+      <div class="actions" style="margin-bottom:9px">
+        <button type="button" class="primary" id="dialDoc">Ouvrir le document seul</button>
+        <button type="button" id="dialPartager">Partager le fichier</button>
+      </div>
+    </div>
     <div class="actions">
       <button type="button" id="dialAnnuler">Annuler</button>
       <button type="button" class="primary" id="dialOk">Ouvrir l'impression</button>
@@ -1732,6 +1744,92 @@ if('serviceWorker' in navigator && location.protocol !== 'file:'){
 }
 
 /* =====================================================================
+   IMPRESSION / PDF
+   window.print() doit être appelé directement dans le geste de l'utilisateur
+   (pas dans un setTimeout) : Safari iOS ignore sinon l'appel. La feuille
+   « @media print » masque déjà le dialogue, aucun délai n'est nécessaire.
+   Si la fenêtre d'impression ne s'ouvre pas (cas connu des applications
+   lancées depuis l'écran d'accueil iOS), on propose d'ouvrir le document seul.
+   ===================================================================== */
+const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let impressionOuverte = false;
+window.addEventListener('beforeprint', function(){ impressionOuverte = true; });
+try{
+  window.matchMedia('print').addEventListener('change', function(e){ if(e.matches) impressionOuverte = true; });
+}catch(e){}
+
+function ouvrirDialogueImpression(secours){
+  $('dialPlateforme').textContent = IOS ? "Dans la fenêtre d'impression iOS :" : "Dans la fenêtre d'impression Android :";
+  $('dialAndroid').style.display = IOS ? 'none' : '';
+  $('dialIos').style.display = IOS ? '' : 'none';
+  $('dialSecours').style.display = secours ? '' : 'none';
+  $('dialChrome').parentNode.style.display = IOS ? 'none' : '';
+  $('dial').classList.add('on');
+}
+
+function lancerImpression(){
+  clearTimeout(minuteur); render();          // aperçu à jour avant impression
+  $('dial').classList.remove('on');
+  stopDictee();
+  impressionOuverte = false;
+  let ok = true;
+  try{ window.print(); }catch(e){ ok = false; }
+  setTimeout(function(){
+    if(!ok || !impressionOuverte) ouvrirDialogueImpression(true);
+  }, 1500);
+}
+
+function nomDocument(){
+  const nom = ($('nom').value||'').trim().toUpperCase();
+  const base = MODE === 'ordo' ? 'Ordonnance' : 'Courrier';
+  return (base + (nom ? ' ' + nom : '')).replace(/[\\/:*?"<>|]/g,'');
+}
+
+function documentAutonome(){
+  clearTimeout(minuteur); render();
+  const css = document.querySelector('style').textContent;
+  const pages = Array.from(document.querySelectorAll('#preview .page')).map(p=>p.outerHTML).join('');
+  return '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">'
+    + '<meta name="viewport" content="width=820">'
+    + '<title>' + esc(nomDocument()) + '</title><style>' + css
+    + '\nbody{background:#5a6270;margin:0;padding:10px}.page{margin:0 auto 12px}'
+    + '.page:last-child{break-after:auto;page-break-after:auto}'
+    + '@media print{body{background:#fff;padding:0}.page{margin:0}}</style></head><body>'
+    + pages + '</body></html>';
+}
+
+function ouvrirDocumentSeul(){
+  $('dial').classList.remove('on');
+  const html = documentAutonome();
+  const w = window.open('', '_blank');
+  if(w && w.document){
+    w.document.open(); w.document.write(html); w.document.close();
+    try{ w.focus(); setTimeout(function(){ try{ w.print(); }catch(e){} }, 400); }catch(e){}
+    return;
+  }
+  /* Fenêtre bloquée : on remplace la page par le document, retour par « Précédent » impossible
+     sans perte de saisie — on préfère donc proposer le partage. */
+  partagerDocument();
+}
+
+function partagerDocument(){
+  const html = documentAutonome();
+  const fichier = nomDocument() + '.html';
+  let f = null;
+  try{ f = new File([html], fichier, {type:'text/html'}); }catch(e){}
+  if(f && navigator.canShare && navigator.canShare({files:[f]})){
+    navigator.share({files:[f], title:nomDocument()}).catch(function(){});
+    return;
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([html], {type:'text/html'}));
+  a.download = fichier;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 60000);
+}
+
+/* =====================================================================
    PERSISTANCE LÉGÈRE (préférences seulement)
    ===================================================================== */
 function sauverPrefs(){
@@ -1873,7 +1971,9 @@ document.addEventListener('click', function(ev){
       ajusterZoom();
       window.scrollTo(0,0);
       break;
-    case 'btnPdf': $('dial').classList.add('on'); break;
+    case 'btnPdf': ouvrirDialogueImpression(false); break;
+    case 'dialDoc': ouvrirDocumentSeul(); break;
+    case 'dialPartager': partagerDocument(); break;
     case 'dialChrome':
       $('dial').classList.remove('on');
       window.open(location.href, '_blank');
@@ -1891,8 +1991,7 @@ document.addEventListener('click', function(ev){
     case 'dialAnnuler': $('dial').classList.remove('on'); break;
     case 'dialOk':
       $('dial').classList.remove('on');
-      stopDictee();
-      setTimeout(()=>window.print(), 120);
+      lancerImpression();
       break;
     case 'btnReset':
       if(!confirm('Effacer le patient et tout le contenu saisi ?')) return;
